@@ -1,3 +1,5 @@
+
+# docs/_config.yml
 title: "Annie's Animal Tales"
 description: "Erlebnisse, Pflege-Tipps und redaktionelle Alltagsberichte aus dem Tierleben"
 baseurl: "/Annies-Animal-Tales"
@@ -7,11 +9,12 @@ language: de
 
 source: .
 destination: _site
+
 exclude:
   - README.md
   - Gemfile
   - Gemfile.lock
-  - _posts/en
+  # _posts/en ist ALT - nicht mehr nötig, da wir jetzt en/_posts/ nutzen
 
 markdown: kramdown
 kramdown:
@@ -26,16 +29,35 @@ collections:
     permalink: /kindergeschichten/:slug/
 
 defaults:
+  # Deutsche Posts (in _posts)
   - scope:
       path: "_posts"
+      type: posts
     values:
       layout: post
       lang: de
+      
+  # Deutsche Stories (in _kindergeschichten)
   - scope:
       path: "_kindergeschichten"
+      type: kindergeschichten
     values:
       layout: story
       lang: de
+      
+  # Englische Posts (in en/_posts) - brauchen keinen Collection-Type
+  - scope:
+      path: "en/_posts"
+    values:
+      layout: post
+      lang: en
+      
+  # Englische Stories (in en/_kindergeschichten) - brauchen keinen Collection-Type
+  - scope:
+      path: "en/_kindergeschichten"
+    values:
+      layout: story
+      lang: en
 
 plugins:
   - jekyll-feed
