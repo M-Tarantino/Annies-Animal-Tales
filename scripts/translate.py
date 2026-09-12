@@ -1,4 +1,4 @@
-# scripts/translate.py (FINAL)
+# scripts/translate.py (KORRIGIERT)
 import os
 import yaml
 import requests
@@ -9,10 +9,14 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 REPO_ROOT = Path(__file__).parent.parent
+
+# DE Quellen
 POSTS_DIR = REPO_ROOT / "docs" / "_posts"
-POSTS_EN_DIR = REPO_ROOT / "docs" / "_posts" / "en"
 STORIES_DIR = REPO_ROOT / "docs" / "_kindergeschichten"
-STORIES_EN_DIR = REPO_ROOT / "docs" / "_kindergeschichten" / "en"
+
+# EN Ziele (in en/ Ordner)
+POSTS_EN_DIR = REPO_ROOT / "docs" / "en" / "_posts"
+STORIES_EN_DIR = REPO_ROOT / "docs" / "en" / "_kindergeschichten"
 
 POSTS_EN_DIR.mkdir(parents=True, exist_ok=True)
 STORIES_EN_DIR.mkdir(parents=True, exist_ok=True)
@@ -20,7 +24,6 @@ STORIES_EN_DIR.mkdir(parents=True, exist_ok=True)
 def get_translated_text(text: str) -> str:
     """Translate German text to English using Groq API"""
     if not GROQ_API_KEY:
-        print("⚠️  GROQ_API_KEY nicht gesetzt")
         return text
 
     payload = {
@@ -67,6 +70,7 @@ def extract_date_from_filename(filename: str) -> str:
 
 def process_file(source_file: Path, target_dir: Path, content_type: str = "blog") -> bool:
     """
+    Übersetzt eine DE-Datei und speichert sie in en/ Ordner
     content_type: "blog" oder "story"
     """
     try:
@@ -98,7 +102,7 @@ def process_file(source_file: Path, target_dir: Path, content_type: str = "blog"
         en_frontmatter["title"] = title_en
         en_frontmatter["description"] = desc_en
 
-        # Set permalink
+        # Set permalink (mit baseurl)
         slug = extract_slug_from_filename(source_file.name)
         date = extract_date_from_filename(source_file.name)
         
@@ -107,7 +111,7 @@ def process_file(source_file: Path, target_dir: Path, content_type: str = "blog"
         else:
             en_frontmatter["permalink"] = f"/en/archive/{date}/{slug}/"
 
-        # Write EN file
+        # Write EN file IN en/ ORDNER
         en_filename = target_dir / source_file.name
         en_yaml = yaml.dump(en_frontmatter, default_flow_style=False, allow_unicode=True, sort_keys=False)
         en_markdown = f"---\n{en_yaml}---\n\n{content_en}"
@@ -115,7 +119,7 @@ def process_file(source_file: Path, target_dir: Path, content_type: str = "blog"
         with open(en_filename, "w", encoding="utf-8") as f:
             f.write(en_markdown)
 
-        print(f"  ✅ {en_filename.name}")
+        print(f"  ✅ {en_filename.relative_to(REPO_ROOT)}")
         return True
 
     except Exception as e:
