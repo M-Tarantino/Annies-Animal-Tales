@@ -3,23 +3,28 @@
 layout: default
 title: Home
 lang: en
-permalink: /en/
 ---
 
-# 🐾 Annie's Animal Tales
+<section class="home-hero">
+  <h1>🐾 Welcome to Annie's Animal Tales</h1>
+  <p class="hero-subtitle">Adventures, care tips and daily stories from the animal world.</p>
+</section>
 
-Welcome to our blog about pet adventures, care tips, and daily stories.
-
-## Latest Stories
-
-<div class="post-list">
-  {% for post in site.posts %}
-    {% if post.lang == 'en' %}
-      <article>
-        <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-        <time>{{ post.date | date: "%d. %B %Y" }}</time>
-        <p>{{ post.description }}</p>
-      </article>
-    {% endif %}
-  {% endfor %}
-</div>
+<section class="home-latest">
+  <h2>Latest Posts</h2>
+  {% if site.posts.size > 0 %}
+    {% for post in site.posts limit:3 %}
+      {% if post.lang == 'en' %}
+        <article class="post-preview">
+          {% if post.image %}<img src="{{ site.baseurl }}{{ post.image }}" alt="{{ post.title }}">{% endif %}
+          <div class="post-preview-content">
+            <h2><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h2>
+            <p>{{ post.description }}</p>
+            <time>{{ post.date | date: "%B %d, %Y" }}</time>
+          </div>
+        </article>
+      {% endif %}
+    {% endfor %}
+    <div class="home-cta"><a href="{{ site.baseurl }}/en/archive/" class="btn">All Posts →</a></div>
+  {% endif %}
+</section>
