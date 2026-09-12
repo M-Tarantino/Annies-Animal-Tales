@@ -1,4 +1,4 @@
-<!-- docs/_layouts/default.html (mit echtem Language-Switching) -->
+<!-- docs/_layouts/default.html -->
 <!DOCTYPE html>
 <html lang="{{ page.lang | default: 'de' }}">
 <head>
@@ -9,8 +9,10 @@
   <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
   <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>🐾</text></svg>">
   <style>
-    .nav-container { display: flex; justify-content: space-between; align-items: center; }
-    .nav-menu { display: flex; list-style: none; gap: 20px; }
+    .nav-container { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .nav-menu { display: flex; list-style: none; gap: 20px; margin: 0; }
+    .nav-menu a { color: #8a5a3b; text-decoration: none; font-weight: 500; transition: all 0.3s; }
+    .nav-menu a:hover { color: #5c3b26; }
     .lang-dropdown { position: relative; }
     .lang-toggle { padding: 8px 14px; background: #e8dcc8; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; color: #8a5a3b; display: flex; align-items: center; gap: 6px; transition: all 0.3s; }
     .lang-toggle:hover { background: #8a5a3b; color: white; }
@@ -22,7 +24,7 @@
     .lang-option:hover { background: #f5ead9; }
     .lang-option.active { background: #8a5a3b; color: white; font-weight: 600; }
     @media (max-width: 768px) {
-      .nav-container { flex-wrap: wrap; gap: 12px; }
+      .nav-container { gap: 12px; }
       .nav-menu { gap: 12px; font-size: 14px; }
       .lang-toggle { padding: 6px 10px; font-size: 12px; }
     }
@@ -67,6 +69,8 @@
   </footer>
 
   <script>
+const BASEURL = "{{ site.baseurl }}";
+
 function toggleLangMenu(e) {
   e.preventDefault();
   const dropdown = document.getElementById('langDropdown');
@@ -75,22 +79,31 @@ function toggleLangMenu(e) {
 
 function navigateToLanguage(lang, e) {
   e.preventDefault();
-  const currentPath = window.location.pathname;
-  const currentLang = document.documentElement.lang;
   
+  const currentLang = document.documentElement.lang || 'de';
   if (lang === currentLang) return;
   
+  let currentPath = window.location.pathname;
   let newPath = currentPath;
   
-  // Bestimme Sprachpfade
+  // Entferne baseurl vom Anfang für Verarbeitung
+  if (BASEURL && currentPath.startsWith(BASEURL)) {
+    currentPath = currentPath.substring(BASEURL.length) || '/';
+  }
+  
   if (currentLang === 'en') {
-    // Von EN zu DE: /en/... → /...
-    newPath = currentPath.replace('/en/', '/');
+    // Von EN zu DE: /en/archive/... → /archive/...
+    newPath = currentPath.replace(/^\/en/, '') || '/';
   } else if (lang === 'en') {
-    // Von DE zu EN: /... → /en/...
+    // Von DE zu EN: /archive/... → /en/archive/...
     if (!currentPath.startsWith('/en/')) {
       newPath = '/en' + currentPath;
     }
+  }
+  
+  // Füge baseurl wieder hinzu
+  if (BASEURL) {
+    newPath = BASEURL + newPath;
   }
   
   window.location.href = newPath;
