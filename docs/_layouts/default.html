@@ -1,6 +1,6 @@
-<!-- docs/_layouts/default.html (Language Switcher mit Dropdown) -->
+<!-- docs/_layouts/default.html (mit echtem Language-Switching) -->
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ page.lang | default: 'de' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,14 +9,23 @@
   <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
   <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>🐾</text></svg>">
   <style>
-    .lang-dropdown { position: relative; display: inline-block; }
-    .lang-toggle { padding: 8px 16px; background: none; border: 1px solid #8a5a3b; border-radius: 6px; cursor: pointer; font-weight: 600; color: #8a5a3b; display: flex; align-items: center; gap: 6px; transition: all 0.3s; }
+    .nav-container { display: flex; justify-content: space-between; align-items: center; }
+    .nav-menu { display: flex; list-style: none; gap: 20px; }
+    .lang-dropdown { position: relative; }
+    .lang-toggle { padding: 8px 14px; background: #e8dcc8; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; color: #8a5a3b; display: flex; align-items: center; gap: 6px; transition: all 0.3s; }
     .lang-toggle:hover { background: #8a5a3b; color: white; }
-    .lang-menu { display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1000; min-width: 120px; }
+    .lang-menu { display: none; position: absolute; top: 110%; right: 0; background: white; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; min-width: 150px; }
     .lang-dropdown.active .lang-menu { display: block; }
-    .lang-option { display: block; width: 100%; padding: 12px 16px; background: none; border: none; text-align: left; cursor: pointer; color: #333; transition: all 0.2s; }
-    .lang-option:hover { background: #f5ead9; color: #8a5a3b; font-weight: 600; }
+    .lang-option { display: block; width: 100%; padding: 12px 16px; background: none; border: none; text-align: left; cursor: pointer; color: #333; transition: all 0.2s; font-size: 14px; }
+    .lang-option:first-child { border-radius: 6px 6px 0 0; }
+    .lang-option:last-child { border-radius: 0 0 6px 6px; }
+    .lang-option:hover { background: #f5ead9; }
     .lang-option.active { background: #8a5a3b; color: white; font-weight: 600; }
+    @media (max-width: 768px) {
+      .nav-container { flex-wrap: wrap; gap: 12px; }
+      .nav-menu { gap: 12px; font-size: 14px; }
+      .lang-toggle { padding: 6px 10px; font-size: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -25,15 +34,17 @@
       <div class="nav-container">
         <a href="{{ '/' | relative_url }}" class="nav-logo">🐾 {{ site.title }}</a>
         <ul class="nav-menu">
-          <li><a href="{{ '/' | relative_url }}">Startseite</a></li>
-          <li><a href="{{ '/archive/' | relative_url }}">Blog</a></li>
-          <li><a href="{{ '/kindergeschichten/' | relative_url }}">Kindergeschichten</a></li>
+          <li><a href="{{ '/' | relative_url }}">{% if page.lang == 'en' %}Home{% else %}Startseite{% endif %}</a></li>
+          <li><a href="{{ '/archive/' | relative_url }}">{% if page.lang == 'en' %}Blog{% else %}Blog{% endif %}</a></li>
+          <li><a href="{{ '/kindergeschichten/' | relative_url }}">{% if page.lang == 'en' %}Stories{% else %}Kindergeschichten{% endif %}</a></li>
         </ul>
         <div class="lang-dropdown" id="langDropdown">
-          <button class="lang-toggle" onclick="toggleLangMenu()">🌐 <span id="langLabel">DE</span></button>
+          <button class="lang-toggle" onclick="toggleLangMenu(event)">
+            🌐 <span id="langLabel">{% if page.lang == 'en' %}EN{% else %}DE{% endif %}</span>
+          </button>
           <div class="lang-menu">
-            <button class="lang-option active" onclick="switchLanguage('de')">🇩🇪 Deutsch</button>
-            <button class="lang-option" onclick="switchLanguage('en')">🇬🇧 English</button>
+            <button class="lang-option {% if page.lang == 'de' or page.lang == nil %}active{% endif %}" onclick="navigateToLanguage('de', event)">🇩🇪 Deutsch</button>
+            <button class="lang-option {% if page.lang == 'en' %}active{% endif %}" onclick="navigateToLanguage('en', event)">🇬🇧 English</button>
           </div>
         </div>
       </div>
@@ -46,61 +57,46 @@
 
   <footer class="footer">
     <div class="footer-content">
-      <p>&copy; 2026 {{ site.title }}. Alle Rechte vorbehalten.</p>
+      <p>&copy; 2026 {{ site.title }}. {% if page.lang == 'en' %}All rights reserved.{% else %}Alle Rechte vorbehalten.{% endif %}</p>
       <div class="footer-links">
-        <a href="{{ '/impressum/' | relative_url }}">Impressum</a>
-        <a href="{{ '/datenschutz/' | relative_url }}">Datenschutzerklärung</a>
+        <a href="{{ '/impressum/' | relative_url }}">{% if page.lang == 'en' %}Imprint{% else %}Impressum{% endif %}</a>
+        <a href="{{ '/datenschutz/' | relative_url }}">{% if page.lang == 'en' %}Privacy{% else %}Datenschutz{% endif %}</a>
         <a href="{{ '/admin.html' | relative_url }}" class="login-btn">🔐 Admin</a>
       </div>
     </div>
   </footer>
 
   <script>
-function toggleLangMenu() {
+function toggleLangMenu(e) {
+  e.preventDefault();
   const dropdown = document.getElementById('langDropdown');
   dropdown.classList.toggle('active');
 }
 
-function switchLanguage(lang) {
-  // Sprache in localStorage speichern
-  localStorage.setItem('blog-lang', lang);
-  
-  // Dropdown schließen
-  document.getElementById('langDropdown').classList.remove('active');
-  
-  // Label aktualisieren
-  document.getElementById('langLabel').textContent = lang === 'de' ? 'DE' : 'EN';
-  
-  // Buttons aktualisieren
-  document.querySelectorAll('.lang-option').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  event.target.classList.add('active');
-  
-  // Seite neu laden mit Sprache als Parameter
+function navigateToLanguage(lang, e) {
+  e.preventDefault();
+  const currentPath = window.location.pathname;
   const currentLang = document.documentElement.lang;
-  if (lang !== currentLang) {
-    // Locale-Cookie setzen
-    document.cookie = `blog_lang=${lang}; path=/; max-age=31536000`;
-    location.reload();
+  
+  if (lang === currentLang) return;
+  
+  let newPath = currentPath;
+  
+  // Bestimme Sprachpfade
+  if (currentLang === 'en') {
+    // Von EN zu DE: /en/... → /...
+    newPath = currentPath.replace('/en/', '/');
+  } else if (lang === 'en') {
+    // Von DE zu EN: /... → /en/...
+    if (!currentPath.startsWith('/en/')) {
+      newPath = '/en' + currentPath;
+    }
   }
+  
+  window.location.href = newPath;
 }
 
-// Sprache beim Laden laden
-window.addEventListener('DOMContentLoaded', () => {
-  const savedLang = localStorage.getItem('blog-lang') || 'de';
-  document.getElementById('langLabel').textContent = savedLang === 'de' ? 'DE' : 'EN';
-  
-  const buttons = document.querySelectorAll('.lang-option');
-  buttons.forEach(btn => {
-    if ((savedLang === 'de' && btn.textContent.includes('Deutsch')) ||
-        (savedLang === 'en' && btn.textContent.includes('English'))) {
-      btn.classList.add('active');
-    }
-  });
-});
-
-// Dropdown schließen beim Klick außerhalb
+// Menü schließen bei Click außerhalb
 document.addEventListener('click', (e) => {
   const dropdown = document.getElementById('langDropdown');
   if (!dropdown.contains(e.target)) {
