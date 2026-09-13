@@ -1,3 +1,4 @@
+
 import os
 import yaml
 import requests
@@ -13,8 +14,7 @@ REPO_ROOT = Path(__file__).parent.parent
 POSTS_DIR = REPO_ROOT / "docs" / "_posts"
 STORIES_DIR = REPO_ROOT / "docs" / "_kindergeschichten"
 
-# EN Ziele - FLACH direkt unter docs/, da Jekyll Collections nicht
-# verschachtelt unter docs/en/ erkennt
+# EN Ziele
 POSTS_EN_DIR = REPO_ROOT / "docs" / "_posts_en"
 STORIES_EN_DIR = REPO_ROOT / "docs" / "_kindergeschichten_en"
 
@@ -23,6 +23,8 @@ STORIES_EN_DIR.mkdir(parents=True, exist_ok=True)
 
 def get_translated_text(text: str) -> str:
     if not GROQ_API_KEY:
+        raise ValueError("GROQ_API_KEY ist nicht gesetzt.")
+    if not text.strip():
         return text
 
     payload = {
@@ -43,68 +45,57 @@ def get_translated_text(text: str) -> str:
         "Content-Type": "application/json"
     }
 
-    try:
-        response = requests.post(GROQ_API_URL, json=payload, headers=headers, timeout=60)
-        response.raise_for_status()
-        result = response.json()
-        if "choices" in result and len(result["choices"]) > 0:
-            translated = result["choices"][0]["message"]["content"].strip()
-            time.sleep(0.5)
-            return translated
-        return text
-    except Exception as e:
-        print(f"  ⚠️  Übersetzung fehlgeschlagen: {e}")
-        return text
+    response = requests.post(GROQ_API_URL, json=payload, headers=headers, timeout=60)
+    response.raise_for_status()
+    
+    result = response.json()
+    if "choices" in result and len(result["choices"]) > 0:
+        translated = result["choices"][0]["message"]["content"].strip()
+        time.sleep(0.5)
+        return translated
+    
+    raise RuntimeError("Die API-Antwort enthielt keine gültigen 'choices'.")
 
 def process_file(source_file: Path, target_dir: Path) -> bool:
-    """Übersetzt eine DE-Datei 1:1 in den passenden EN-Collection-Ordner.
-    Permalink wird NICHT mehr manuell gesetzt - die Collection in
-    _config.yml erledigt das über :slug automatisch."""
-    try:
-        with open(source_file, "r", encoding="utf-8") as f:
-            content = f.read()
+    """Übersetzt eine DE-Datei 1:1 in den passenden EN-Collection-Ordner."""
+    with open(source_file, "r", encoding="utf-8") as f:
+        content = f.read()
 
-        parts = content.split("---", 2)
-        if len(parts) < 3:
-            print(f"  ❌ Ungültiges Format")
-            return False
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        raise ValueError(f"Ungültiges Format in Datei: {source_file.name}")
 
-        frontmatter = yaml.safe_load(parts[1].strip()) or {}
-        markdown_content = parts[2].strip()
+    frontmatter = yaml.safe_load(parts[1].strip()) or {}
+    markdown_content = parts[2].strip()
 
-        if frontmatter.get("lang") == "en":
-            return False
-
-        print(f"  → Übersetze: {source_file.name}")
-
-        title_en = get_translated_text(frontmatter.get("title", ""))
-        desc_en = get_translated_text(frontmatter.get("description", ""))
-        content_en = get_translated_text(markdown_content)
-
-        en_frontmatter = frontmatter.copy()
-        en_frontmatter["lang"] = "en"
-        en_frontmatter["title"] = title_en
-        en_frontmatter["description"] = desc_en
-        en_frontmatter.pop("permalink", None)  # Collection setzt Permalink selbst
-
-        en_filename = target_dir / source_file.name
-        en_yaml = yaml.dump(en_frontmatter, default_flow_style=False, allow_unicode=True, sort_keys=False)
-        en_markdown = f"---\n{en_yaml}---\n\n{content_en}"
-
-        with open(en_filename, "w", encoding="utf-8") as f:
-            f.write(en_markdown)
-
-        print(f"  ✅ {en_filename.relative_to(REPO_ROOT)}")
-        return True
-
-    except Exception as e:
-        print(f"  ❌ Fehler: {e}")
+    if frontmatter.get("lang") == "en":
         return False
+
+    print(f"  → Übersetze: {source_file.name}")
+
+    title_en = get_translated_text(frontmatter.get("title", ""))
+    desc_en = get_translated_text(frontmatter.get("description", ""))
+    content_en = get_translated_text(markdown_content)
+
+    en_frontmatter = frontmatter.copy()
+    en_frontmatter["lang"] = "en"
+    en_frontmatter["title"] = title_en
+    en_frontmatter["description"] = desc_en
+    en_frontmatter.pop("permalink", None)
+
+    en_filename = target_dir / source_file.name
+    en_yaml = yaml.dump(en_frontmatter, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    en_markdown = f"---\n{en_yaml}---\n\n{content_en}"
+
+    with open(en_filename, "w", encoding="utf-8") as f:
+        f.write(en_markdown)
+
+    print(f"  ✅ {en_filename.relative_to(REPO_ROOT)}")
+    return True
 
 def main():
     if not GROQ_API_KEY:
-        print("❌ GROQ_API_KEY nicht gesetzt\n")
-        return
+        raise ValueError("GROQ_API_KEY nicht gesetzt")
 
     count = 0
 
