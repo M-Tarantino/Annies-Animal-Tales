@@ -1,29 +1,46 @@
 ---
 layout: default
-title: Imprint
+title: Privacy Policy
 lang: en
-permalink: /en/imprint/
+permalink: /en/privacy/
 ---
 
-# 📋 Imprint
+# 🔒 Privacy Policy
 
-**Information according to § 5 TMG**
+**Effective:** September 2026
 
-Responsible for content according to § 55 section 2 RStV:
+We appreciate your interest in our blog. Protection of your privacy is important to us.
 
-**Name:** Annie [YOUR NAME]  
-**Address:** [YOUR ADDRESS]  
-**Email:** [YOUR EMAIL]  
-**Phone:** [YOUR PHONE]
+## 1. Responsible Entity
 
----
+Annie [YOUR NAME]  
+[YOUR ADDRESS]  
+[YOUR EMAIL]
 
-## Disclaimer
+## 2. Data Collection
 
-The contents of our pages have been created with great care. However, we cannot guarantee the correctness, completeness and timeliness of the contents.
+Our website is a static site hosted on GitHub Pages. We do not collect personal data.
 
----
+**GitHub Pages Data:** GitHub processes access logs. See GitHub Privacy Statement: https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement
 
-## Copyright
+## 3. Cookies
 
-The content and works created by the site operator on these pages are subject to German copyright law. Reproduction, processing, distribution and any kind of exploitation outside the limits of copyright law require the written consent of the author or creator.
+This website does not use cookies.
+
+## 4. Links to External Websites
+
+Our website contains links to external websites. We have no influence over their contents or privacy practices.
+
+## 5. Your Rights
+
+You have the following rights:
+- Right to information
+- Right to correction
+- Right to deletion
+- Right to data portability
+
+Contact us: [YOUR EMAIL]
+
+## 6. Changes
+
+We reserve the right to modify this privacy policy at any time.
