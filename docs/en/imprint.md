@@ -1,4 +1,3 @@
-# docs/en/imprint.md
 ---
 layout: default
 title: Imprint
