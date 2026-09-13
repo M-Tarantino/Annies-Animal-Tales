@@ -1,4 +1,3 @@
-# scripts/translate.py (KORRIGIERT)
 import os
 import yaml
 import requests
@@ -14,15 +13,15 @@ REPO_ROOT = Path(__file__).parent.parent
 POSTS_DIR = REPO_ROOT / "docs" / "_posts"
 STORIES_DIR = REPO_ROOT / "docs" / "_kindergeschichten"
 
-# EN Ziele (in en/ Ordner)
-POSTS_EN_DIR = REPO_ROOT / "docs" / "en" / "_posts"
-STORIES_EN_DIR = REPO_ROOT / "docs" / "en" / "_kindergeschichten"
+# EN Ziele - FLACH direkt unter docs/, da Jekyll Collections nicht
+# verschachtelt unter docs/en/ erkennt
+POSTS_EN_DIR = REPO_ROOT / "docs" / "_posts_en"
+STORIES_EN_DIR = REPO_ROOT / "docs" / "_kindergeschichten_en"
 
 POSTS_EN_DIR.mkdir(parents=True, exist_ok=True)
 STORIES_EN_DIR.mkdir(parents=True, exist_ok=True)
 
 def get_translated_text(text: str) -> str:
-    """Translate German text to English using Groq API"""
     if not GROQ_API_KEY:
         return text
 
@@ -48,7 +47,6 @@ def get_translated_text(text: str) -> str:
         response = requests.post(GROQ_API_URL, json=payload, headers=headers, timeout=60)
         response.raise_for_status()
         result = response.json()
-        
         if "choices" in result and len(result["choices"]) > 0:
             translated = result["choices"][0]["message"]["content"].strip()
             time.sleep(0.5)
@@ -58,21 +56,10 @@ def get_translated_text(text: str) -> str:
         print(f"  ⚠️  Übersetzung fehlgeschlagen: {e}")
         return text
 
-def extract_slug_from_filename(filename: str) -> str:
-    """2026-09-08-willkommen.md → willkommen"""
-    parts = filename.replace(".md", "").split("-", 3)
-    return parts[3] if len(parts) > 3 else filename.replace(".md", "")
-
-def extract_date_from_filename(filename: str) -> str:
-    """2026-09-08-willkommen.md → 2026-09-08"""
-    parts = filename.replace(".md", "").split("-", 3)
-    return "-".join(parts[:3]) if len(parts) >= 3 else ""
-
-def process_file(source_file: Path, target_dir: Path, content_type: str = "blog") -> bool:
-    """
-    Übersetzt eine DE-Datei und speichert sie in en/ Ordner
-    content_type: "blog" oder "story"
-    """
+def process_file(source_file: Path, target_dir: Path) -> bool:
+    """Übersetzt eine DE-Datei 1:1 in den passenden EN-Collection-Ordner.
+    Permalink wird NICHT mehr manuell gesetzt - die Collection in
+    _config.yml erledigt das über :slug automatisch."""
     try:
         with open(source_file, "r", encoding="utf-8") as f:
             content = f.read()
@@ -88,30 +75,18 @@ def process_file(source_file: Path, target_dir: Path, content_type: str = "blog"
         if frontmatter.get("lang") == "en":
             return False
 
-        frontmatter["lang"] = "de"
         print(f"  → Übersetze: {source_file.name}")
 
-        # Translate
         title_en = get_translated_text(frontmatter.get("title", ""))
         desc_en = get_translated_text(frontmatter.get("description", ""))
         content_en = get_translated_text(markdown_content)
 
-        # Create EN frontmatter
         en_frontmatter = frontmatter.copy()
         en_frontmatter["lang"] = "en"
         en_frontmatter["title"] = title_en
         en_frontmatter["description"] = desc_en
+        en_frontmatter.pop("permalink", None)  # Collection setzt Permalink selbst
 
-        # Set permalink (mit baseurl)
-        slug = extract_slug_from_filename(source_file.name)
-        date = extract_date_from_filename(source_file.name)
-        
-        if content_type == "story":
-            en_frontmatter["permalink"] = f"/en/kindergeschichten/{date}/{slug}/"
-        else:
-            en_frontmatter["permalink"] = f"/en/archive/{date}/{slug}/"
-
-        # Write EN file IN en/ ORDNER
         en_filename = target_dir / source_file.name
         en_yaml = yaml.dump(en_frontmatter, default_flow_style=False, allow_unicode=True, sort_keys=False)
         en_markdown = f"---\n{en_yaml}---\n\n{content_en}"
@@ -133,32 +108,26 @@ def main():
 
     count = 0
 
-    # Blog Posts
     print("📝 Blog-Posts...")
     for post_file in sorted(POSTS_DIR.glob("*.md")):
-        if post_file.name.startswith(".") or post_file.name == ".gitkeep":
+        if post_file.name.startswith("."):
             continue
-        
         en_file = POSTS_EN_DIR / post_file.name
         if en_file.exists():
             print(f"  ⏭️  {post_file.name} (bereits übersetzt)")
             continue
-        
-        if process_file(post_file, POSTS_EN_DIR, "blog"):
+        if process_file(post_file, POSTS_EN_DIR):
             count += 1
 
-    # Stories
     print("\n📖 Kindergeschichten...")
     for story_file in sorted(STORIES_DIR.glob("*.md")):
-        if story_file.name.startswith(".") or story_file.name == ".gitkeep":
+        if story_file.name.startswith("."):
             continue
-        
         en_file = STORIES_EN_DIR / story_file.name
         if en_file.exists():
             print(f"  ⏭️  {story_file.name} (bereits übersetzt)")
             continue
-        
-        if process_file(story_file, STORIES_EN_DIR, "story"):
+        if process_file(story_file, STORIES_EN_DIR):
             count += 1
 
     print(f"\n🎉 {count} neue Dateien übersetzt\n")
