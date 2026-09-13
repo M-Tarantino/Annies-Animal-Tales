@@ -7,7 +7,7 @@ layout: default
     <h1>{{ page.title }}</h1>
     <div class="post-meta">
       <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%d. %B %Y" }}</time>
-      {% if page.author %}<span class="post-author">von {{ page.author }}</span>{% endif %}
+      {% if page.author %}<span class="post-author">{% if page.lang == 'en' %}by{% else %}von{% endif %} {{ page.author }}</span>{% endif %}
     </div>
     {% if page.image %}<img src="{{ page.image | relative_url }}" alt="{{ page.title }}" class="post-image">{% endif %}
   </header>
