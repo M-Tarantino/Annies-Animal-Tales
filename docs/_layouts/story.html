@@ -7,9 +7,9 @@ layout: default
     <h1>{{ page.title }}</h1>
     <div class="story-meta">
       <time>{{ page.date | date: "%d.%m.%Y" }}</time>
-      {% if page.author %}<span>von {{ page.author }}</span>{% endif %}
+      {% if page.author %}<span>{% if page.lang == 'en' %}by{% else %}von{% endif %} {{ page.author }}</span>{% endif %}
       {% if page.age_group %}<span class="age-badge">{{ page.age_group }}</span>{% endif %}
-      {% if page.reading_time %}<span>📖 {{ page.reading_time }} Min</span>{% endif %}
+      {% if page.reading_time %}<span>📖 {{ page.reading_time }} {% if page.lang == 'en' %}min{% else %}Min{% endif %}</span>{% endif %}
     </div>
     {% if page.image %}<img src="{{ page.image | relative_url }}" alt="{{ page.title }}" class="story-image">{% endif %}
   </header>
@@ -23,7 +23,11 @@ layout: default
   {% endif %}
   <nav class="story-nav">
     {% if page.previous %}<a href="{{ page.previous.url | relative_url }}">← {{ page.previous.title }}</a>{% else %}<span></span>{% endif %}
-    <a href="{{ '/kindergeschichten/' | relative_url }}">📚 Alle Geschichten</a>
+    {% if page.lang == 'en' %}
+      <a href="{{ '/en/stories-overview/' | relative_url }}">📚 All Stories</a>
+    {% else %}
+      <a href="{{ '/kindergeschichten/' | relative_url }}">📚 Alle Geschichten</a>
+    {% endif %}
     {% if page.next %}<a href="{{ page.next.url | relative_url }}">{{ page.next.title }} →</a>{% else %}<span></span>{% endif %}
   </nav>
 </article>
